@@ -343,6 +343,7 @@ export function OddsApp() {
 
       {isSicBo ? (
         <>
+          <ReferenceBanner options={options} stats={stats} />
           {inputPad}
           {road}
           <details className="rounded-xl border border-zinc-800 bg-zinc-900/40 open:pb-2">
