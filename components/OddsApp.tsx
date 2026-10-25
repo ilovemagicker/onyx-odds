@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Disclaimer } from "@/components/Disclaimer";
 import { PasteInput } from "@/components/PasteInput";
+import { PayoutTable } from "@/components/PayoutTable";
 import { ReferenceBanner } from "@/components/ReferenceBanner";
 import { ResultButtons } from "@/components/ResultButtons";
 import { Road } from "@/components/Road";
 import { SetupPanel } from "@/components/SetupPanel";
 import { StatsTable } from "@/components/StatsTable";
-import { exportResultsText } from "@/lib/export";
+import { exportRoundsText } from "@/lib/export";
 import {
   MAX_OPTIONS,
   MIN_OPTIONS,
@@ -17,13 +18,24 @@ import {
   resizeOptions,
 } from "@/lib/options";
 import { parsePaste } from "@/lib/paste";
+import {
+  appendOutcomeRound,
+  commitBetRound,
+  togglePendingId,
+  undoRound,
+} from "@/lib/rounds";
 import { computeStats } from "@/lib/stats";
 import { loadState, saveState } from "@/lib/storage";
-import type { Option } from "@/lib/types";
+import { applyTemplate, applyTrackMode } from "@/lib/switch";
+import { getTemplate } from "@/lib/templates";
+import type { Option, Round, TemplateId, TrackMode } from "@/lib/types";
 
 export function OddsApp() {
+  const [templateId, setTemplateId] = useState<TemplateId | null>(null);
+  const [trackMode, setTrackMode] = useState<TrackMode>("outcome");
   const [options, setOptions] = useState<Option[]>(() => defaultOptions(2));
-  const [results, setResults] = useState<number[]>([]);
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [pendingIds, setPendingIds] = useState<number[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -31,28 +43,77 @@ export function OddsApp() {
 
   useEffect(() => {
     const state = loadState();
+    setTemplateId(state.templateId);
+    setTrackMode(state.trackMode);
     setOptions(state.options);
-    setResults(state.results);
+    setRounds(state.rounds);
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
     saveState({
+      templateId,
+      trackMode,
       options,
-      results,
+      rounds,
       updatedAt: Date.now(),
     });
-  }, [options, results, hydrated]);
+  }, [templateId, trackMode, options, rounds, hydrated]);
 
   const stats = useMemo(
-    () => computeStats(options, results),
-    [options, results],
+    () => computeStats(options, rounds),
+    [options, rounds],
+  );
+
+  const payoutRows =
+    templateId === null ? null : getTemplate(templateId).payoutRows;
+
+  const handleSelectTemplate = useCallback(
+    (id: TemplateId | null) => {
+      if (id === templateId) return;
+      if (rounds.length > 0) {
+        const ok = window.confirm("確定切換遊戲並清空目前紀錄？");
+        if (!ok) return;
+      }
+      const next = applyTemplate(
+        { templateId, trackMode, options, rounds, updatedAt: Date.now() },
+        id,
+      );
+      setTemplateId(next.templateId);
+      setTrackMode(next.trackMode);
+      setOptions(next.options);
+      setRounds(next.rounds);
+      setPendingIds([]);
+      setPasteError(null);
+    },
+    [templateId, trackMode, options, rounds],
+  );
+
+  const handleSelectTrackMode = useCallback(
+    (mode: TrackMode) => {
+      if (mode === trackMode) return;
+      if (rounds.length > 0) {
+        const ok = window.confirm("確定切換追蹤模式並清空目前紀錄？");
+        if (!ok) return;
+      }
+      const next = applyTrackMode(
+        { templateId, trackMode, options, rounds, updatedAt: Date.now() },
+        mode,
+      );
+      setTrackMode(next.trackMode);
+      setOptions(next.options);
+      setRounds(next.rounds);
+      setPendingIds([]);
+      setPasteError(null);
+    },
+    [templateId, trackMode, options, rounds],
   );
 
   const handleChangeN = useCallback(
     (n: number) => {
       if (
+        templateId !== null ||
         !Number.isInteger(n) ||
         n < MIN_OPTIONS ||
         n > MAX_OPTIONS ||
@@ -64,17 +125,16 @@ export function OddsApp() {
         "變更選項數會清空目前所有結果，確定繼續？",
       );
       if (!ok) {
-        // Native <select> can stick on the rejected value after confirm cancel;
-        // remount SetupPanel so value stays synced with options.length.
         setNSelectEpoch((e) => e + 1);
         return;
       }
       const { options: next } = resizeOptions(options, n);
       setOptions(next);
-      setResults([]);
+      setRounds([]);
+      setPendingIds([]);
       setPasteError(null);
     },
-    [options],
+    [options, templateId],
   );
 
   const handleRenameChange = useCallback((id: number, label: string) => {
@@ -87,13 +147,23 @@ export function OddsApp() {
     setOptions((prev) => renameOption(prev, id, label));
   }, []);
 
-  const handlePick = useCallback((id: number) => {
-    setResults((prev) => [...prev, id]);
+  const handlePickOutcome = useCallback((id: number) => {
+    setRounds((prev) => appendOutcomeRound(prev, id));
     setPasteError(null);
   }, []);
 
+  const handleToggleBet = useCallback((id: number) => {
+    setPendingIds((prev) => togglePendingId(prev, id));
+  }, []);
+
+  const handleCommitBet = useCallback(() => {
+    setRounds((prev) => commitBetRound(prev, pendingIds));
+    setPendingIds([]);
+    setPasteError(null);
+  }, [pendingIds]);
+
   const handleUndo = useCallback(() => {
-    setResults((prev) => (prev.length === 0 ? prev : prev.slice(0, -1)));
+    setRounds((prev) => undoRound(prev));
   }, []);
 
   const handlePasteApply = useCallback(
@@ -105,7 +175,7 @@ export function OddsApp() {
       }
       setPasteError(null);
       if (parsed.ids.length > 0) {
-        setResults((prev) => [...prev, ...parsed.ids]);
+        setRounds((prev) => [...prev, ...parsed.ids.map((id) => [id])]);
       }
       return true;
     },
@@ -113,28 +183,41 @@ export function OddsApp() {
   );
 
   const handleClear = useCallback(() => {
-    if (results.length === 0) return;
+    if (rounds.length === 0) return;
     const ok = window.confirm("確定清空所有結果？（選項會保留）");
     if (!ok) return;
-    setResults([]);
+    setRounds([]);
+    setPendingIds([]);
     setPasteError(null);
-  }, [results.length]);
+  }, [rounds.length]);
 
   const handleResetAll = useCallback(() => {
     const ok = window.confirm("確定重設為預設 2 選項並清空結果？");
     if (!ok) return;
+    setTemplateId(null);
+    setTrackMode("outcome");
     setOptions(defaultOptions(2));
-    setResults([]);
+    setRounds([]);
+    setPendingIds([]);
     setPasteError(null);
   }, []);
 
   const handleExport = useCallback(async () => {
-    const text = exportResultsText(options, results);
+    const text = exportRoundsText({
+      templateId,
+      trackMode,
+      options,
+      rounds,
+    });
     setExportMsg(null);
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
-        setExportMsg(text ? "已複製到剪貼簿" : "尚無結果可匯出（已複製空字串）");
+        setExportMsg(
+          rounds.length > 0
+            ? "已複製到剪貼簿"
+            : "尚無結果可匯出（已複製標題）",
+        );
         return;
       }
       throw new Error("clipboard unavailable");
@@ -142,7 +225,7 @@ export function OddsApp() {
       window.prompt("複製以下文字：", text);
       setExportMsg("請手動複製上方文字");
     }
-  }, [options, results]);
+  }, [templateId, trackMode, options, rounds]);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-4 px-4 py-5 sm:gap-5 sm:px-6 sm:py-6">
@@ -156,14 +239,18 @@ export function OddsApp() {
           </span>
         </div>
         <p className="text-sm text-zinc-400">
-          通用 N 選項歷史統計 · 非保證預測
+          賭場模板／自訂統計 · 非保證預測
         </p>
         <Disclaimer />
       </header>
 
       <SetupPanel
-        key={`${options.length}-${nSelectEpoch}`}
+        key={`${templateId ?? "custom"}-${options.length}-${nSelectEpoch}`}
+        templateId={templateId}
+        trackMode={trackMode}
         options={options}
+        onSelectTemplate={handleSelectTemplate}
+        onSelectTrackMode={handleSelectTrackMode}
         onChangeN={handleChangeN}
         onRenameChange={handleRenameChange}
         onRenameCommit={handleRenameCommit}
@@ -173,14 +260,24 @@ export function OddsApp() {
 
       <ResultButtons
         options={options}
-        canUndo={results.length > 0}
-        onPick={handlePick}
+        trackMode={trackMode}
+        pendingIds={pendingIds}
+        canUndo={rounds.length > 0}
+        onPickOutcome={handlePickOutcome}
+        onToggleBet={handleToggleBet}
+        onCommitBet={handleCommitBet}
         onUndo={handleUndo}
       />
 
-      <PasteInput error={pasteError} onApply={handlePasteApply} />
+      <PasteInput
+        error={pasteError}
+        trackMode={trackMode}
+        onApply={handlePasteApply}
+      />
 
-      <Road options={options} results={results} />
+      <PayoutTable rows={payoutRows} />
+
+      <Road options={options} rounds={rounds} />
 
       <StatsTable stats={stats} />
 
