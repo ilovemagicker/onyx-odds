@@ -21,36 +21,63 @@ export function SetupPanel({
     { length: MAX_OPTIONS - MIN_OPTIONS + 1 },
     (_, i) => MIN_OPTIONS + i,
   );
+  const canDec = n > MIN_OPTIONS;
+  const canInc = n < MAX_OPTIONS;
 
   return (
     <section className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="text-sm text-zinc-400" htmlFor="option-count">
+        <span className="text-sm text-zinc-400" id="option-count-label">
           選項數
-        </label>
-        <select
-          id="option-count"
-          key={n}
-          className="min-h-11 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-base text-zinc-100"
-          value={n}
-          onChange={(e) => {
-            const next = Number(e.target.value);
-            if (
-              !Number.isInteger(next) ||
-              next < MIN_OPTIONS ||
-              next > MAX_OPTIONS
-            ) {
-              return;
-            }
-            onChangeN(next);
-          }}
+        </span>
+        <div
+          className="flex items-center gap-1"
+          role="group"
+          aria-labelledby="option-count-label"
         >
-          {counts.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+          <button
+            type="button"
+            className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-950 text-xl text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="減少選項數"
+            disabled={!canDec}
+            onClick={() => onChangeN(n - 1)}
+          >
+            −
+          </button>
+          <select
+            id="option-count"
+            key={n}
+            className="min-h-12 min-w-[4.5rem] rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-center text-base text-zinc-100"
+            value={n}
+            aria-label="選項數"
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (
+                !Number.isInteger(next) ||
+                next < MIN_OPTIONS ||
+                next > MAX_OPTIONS
+              ) {
+                return;
+              }
+              onChangeN(next);
+            }}
+          >
+            {counts.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-950 text-xl text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="增加選項數"
+            disabled={!canInc}
+            onClick={() => onChangeN(n + 1)}
+          >
+            +
+          </button>
+        </div>
       </div>
       <ul className="grid gap-2 sm:grid-cols-2">
         {options.map((o, index) => (
@@ -60,7 +87,7 @@ export function SetupPanel({
             </span>
             <input
               type="text"
-              className="min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-base text-zinc-100 outline-none focus:border-sky-500"
+              className="min-h-12 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-base text-zinc-100 outline-none focus:border-sky-500"
               value={o.label}
               aria-label={`選項 ${index + 1} 名稱`}
               onChange={(e) => onRenameChange(o.id, e.target.value)}
