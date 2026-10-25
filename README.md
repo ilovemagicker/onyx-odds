@@ -2,7 +2,7 @@
 
 通用 **N 選項**歷史機率／路單**統計**工具（Onyx Labs）。
 
-設定 2–20 個選項並自訂標籤，用大按鈕或貼上字串記錄結果，即時顯示：
+設定 2–50 個選項並自訂標籤，用大按鈕或貼上字串記錄結果，即時顯示：
 
 - **頻率（最熱）** — 各選項出現比例
 - **該出（距上次）** — 多久沒出現
@@ -14,12 +14,16 @@
 | --- | --- |
 | 網域 | [odds.onyxlab.dev](https://odds.onyxlab.dev) |
 | 技術 | Next.js 15、React 19、Tailwind CSS 4、Vitest |
-| 資料 | 僅瀏覽器 `localStorage`（`onyx-odds:v1`）；無後端、無錢包、無帳號 |
-| 規格 | [docs/superpowers/specs/2026-10-25-onyx-odds-design.md](docs/superpowers/specs/2026-10-25-onyx-odds-design.md) |
+| 資料 | 僅瀏覽器 `localStorage`（`onyx-odds:v2`，可遷移 `onyx-odds:v1`）；無後端、無錢包、無帳號 |
+| 規格 | [docs/superpowers/specs/2026-10-25-onyx-odds-templates-design.md](docs/superpowers/specs/2026-10-25-onyx-odds-templates-design.md) |
+
+## Casino templates
+
+Built-in games: 百家樂、龍虎、歐式輪盤、骰寶. Pick a template, choose **結果（互斥）** or **注項（可多選）**, record rounds, and read the same-page payout table (common rules / reference only). Custom 2–50 options remain. Data: `localStorage` key `onyx-odds:v2` (migrates `onyx-odds:v1`).
 
 ## 免責
 
-歷史統計僅供參考，不影響真實下一局機率。本工具不提供賭場賠率或結果保證，亦不鼓勵賭博。
+歷史統計僅供參考，不影響真實下一局機率。賠率表為常見規則整理，實際賭場可能不同；本工具不提供結果保證，亦不鼓勵賭博。
 
 ## 本機開發
 
