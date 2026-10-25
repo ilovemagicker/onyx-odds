@@ -23,24 +23,32 @@ export function ReferenceBanner({ options, stats }: Props) {
         <div className="space-y-1">
           <p className="text-base font-medium text-zinc-200">尚無紀錄</p>
           <p className="text-sm text-zinc-500">
-            點選下方選項或貼上結果後，會顯示最熱與該出最久
+            點選下方選項或貼上結果後，會顯示預測、最熱與該出最久
           </p>
         </div>
       ) : (
-        <dl className="grid gap-2 sm:grid-cols-2">
+        <div className="space-y-3">
           <div>
-            <dt className="text-xs text-zinc-400">最熱</dt>
-            <dd className="text-lg font-semibold text-rose-300">
-              {labelsFor(stats.hottestIds, options)}
-            </dd>
+            <p className="text-xs text-zinc-400">預測下一場</p>
+            <p className="text-2xl font-bold tracking-tight text-sky-300">
+              {labelsFor(stats.predictedIds, options)}
+            </p>
           </div>
-          <div>
-            <dt className="text-xs text-zinc-400">該出最久</dt>
-            <dd className="text-lg font-semibold text-amber-300">
-              {labelsFor(stats.dueIds, options)}
-            </dd>
-          </div>
-        </dl>
+          <dl className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-zinc-400">最熱</dt>
+              <dd className="text-lg font-semibold text-rose-300">
+                {labelsFor(stats.hottestIds, options)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-zinc-400">該出最久</dt>
+              <dd className="text-lg font-semibold text-amber-300">
+                {labelsFor(stats.dueIds, options)}
+              </dd>
+            </div>
+          </dl>
+        </div>
       )}
     </section>
   );

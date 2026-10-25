@@ -9,6 +9,7 @@ export type OptionStat = {
   gap: number;
   isHot: boolean;
   isDue: boolean;
+  isPredicted: boolean;
 };
 
 export type StatsSummary = {
@@ -16,6 +17,7 @@ export type StatsSummary = {
   rows: OptionStat[];
   hottestIds: number[];
   dueIds: number[];
+  predictedIds: number[];
 };
 
 export function computeStats(
@@ -51,24 +53,46 @@ export function computeStats(
       gap,
       isHot: false,
       isDue: false,
+      isPredicted: false,
     };
   });
 
   if (T === 0) {
-    return { total: 0, rows: rowsBase, hottestIds: [], dueIds: [] };
+    return {
+      total: 0,
+      rows: rowsBase,
+      hottestIds: [],
+      dueIds: [],
+      predictedIds: [],
+    };
   }
 
   const maxFreq = Math.max(...rowsBase.map((r) => r.frequency));
   const maxGap = Math.max(...rowsBase.map((r) => r.gap));
-  const hottestIds = rowsBase.filter((r) => r.frequency === maxFreq).map((r) => r.id);
+  const hottestIds = rowsBase
+    .filter((r) => r.frequency === maxFreq)
+    .map((r) => r.id);
   const dueIds = rowsBase.filter((r) => r.gap === maxGap).map((r) => r.id);
+
+  const scores = rowsBase.map((r) => {
+    const hotNorm = maxFreq > 0 ? r.frequency / maxFreq : 0;
+    const dueNorm = maxGap > 0 ? r.gap / maxGap : 0;
+    return hotNorm + dueNorm;
+  });
+  const maxScore = Math.max(...scores);
+  const predictedIds = rowsBase
+    .filter((_, i) => scores[i] === maxScore)
+    .map((r) => r.id);
+
   const hotSet = new Set(hottestIds);
   const dueSet = new Set(dueIds);
+  const predSet = new Set(predictedIds);
   const rows = rowsBase.map((r) => ({
     ...r,
     isHot: hotSet.has(r.id),
     isDue: dueSet.has(r.id),
+    isPredicted: predSet.has(r.id),
   }));
 
-  return { total: T, rows, hottestIds, dueIds };
+  return { total: T, rows, hottestIds, dueIds, predictedIds };
 }
