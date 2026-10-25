@@ -6,6 +6,7 @@ import { PasteInput } from "@/components/PasteInput";
 import { PayoutTable } from "@/components/PayoutTable";
 import { ReferenceBanner } from "@/components/ReferenceBanner";
 import { ResultButtons } from "@/components/ResultButtons";
+import { SicBoDicePad } from "@/components/SicBoDicePad";
 import { Road } from "@/components/Road";
 import { SetupPanel } from "@/components/SetupPanel";
 import { StatsTable } from "@/components/StatsTable";
@@ -43,10 +44,25 @@ export function OddsApp() {
 
   useEffect(() => {
     const state = loadState();
-    setTemplateId(state.templateId);
-    setTrackMode(state.trackMode);
-    setOptions(state.options);
-    setRounds(state.rounds);
+    let templateId = state.templateId;
+    let trackMode = state.trackMode;
+    let options = state.options;
+    let rounds = state.rounds;
+    // 骰寶只支援結果模式 + 骰子輸入；舊資料若為注項則強制切回結果
+    if (templateId === "sic-bo" && trackMode === "bet") {
+      const coerced = applyTrackMode(
+        { templateId, trackMode, options, rounds, updatedAt: state.updatedAt },
+        "outcome",
+      );
+      templateId = coerced.templateId;
+      trackMode = coerced.trackMode;
+      options = coerced.options;
+      rounds = coerced.rounds;
+    }
+    setTemplateId(templateId);
+    setTrackMode(trackMode);
+    setOptions(options);
+    setRounds(rounds);
     setHydrated(true);
   }, []);
 
@@ -93,6 +109,8 @@ export function OddsApp() {
   const handleSelectTrackMode = useCallback(
     (mode: TrackMode) => {
       if (mode === trackMode) return;
+      // 骰寶鎖定結果模式（骰子記入）
+      if (templateId === "sic-bo" && mode === "bet") return;
       if (rounds.length > 0) {
         const ok = window.confirm("確定切換追蹤模式並清空目前紀錄？");
         if (!ok) return;
@@ -258,16 +276,24 @@ export function OddsApp() {
 
       <ReferenceBanner options={options} stats={stats} />
 
-      <ResultButtons
-        options={options}
-        trackMode={trackMode}
-        pendingIds={pendingIds}
-        canUndo={rounds.length > 0}
-        onPickOutcome={handlePickOutcome}
-        onToggleBet={handleToggleBet}
-        onCommitBet={handleCommitBet}
-        onUndo={handleUndo}
-      />
+      {templateId === "sic-bo" ? (
+        <SicBoDicePad
+          canUndo={rounds.length > 0}
+          onCommit={handlePickOutcome}
+          onUndo={handleUndo}
+        />
+      ) : (
+        <ResultButtons
+          options={options}
+          trackMode={trackMode}
+          pendingIds={pendingIds}
+          canUndo={rounds.length > 0}
+          onPickOutcome={handlePickOutcome}
+          onToggleBet={handleToggleBet}
+          onCommitBet={handleCommitBet}
+          onUndo={handleUndo}
+        />
+      )}
 
       <PasteInput
         error={pasteError}

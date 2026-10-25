@@ -48,4 +48,14 @@ describe("applyTrackMode", () => {
     expect(next.options).toHaveLength(2);
     expect(next.rounds).toEqual([]);
   });
+  it("forces outcome when sic-bo requests bet mode", () => {
+    const state = applyTemplate(base(), "sic-bo");
+    state.rounds = [[0]];
+    const next = applyTrackMode(state, "bet");
+    expect(next.trackMode).toBe("outcome");
+    expect(next.options.map((o) => o.label)).toEqual(
+      Array.from({ length: 16 }, (_, i) => String(i + 3)),
+    );
+    expect(next.rounds).toEqual([]);
+  });
 });

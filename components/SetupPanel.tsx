@@ -62,31 +62,38 @@ export function SetupPanel({
 
       <div className="space-y-2">
         <span className="text-sm text-zinc-400">追蹤模式</span>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="追蹤模式">
-          {(
-            [
-              ["outcome", "結果（互斥）"],
-              ["bet", "注項（可多選）"],
-            ] as const
-          ).map(([mode, label]) => {
-            const active = trackMode === mode;
-            return (
-              <button
-                key={mode}
-                type="button"
-                className={`min-h-12 rounded-lg border px-3 text-sm ${
-                  active
-                    ? "border-sky-500 bg-sky-950 text-sky-100"
-                    : "border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500"
-                }`}
-                aria-pressed={active}
-                onClick={() => onSelectTrackMode(mode)}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        {templateId === "sic-bo" ? (
+          <p className="text-sm text-zinc-400">
+            骰寶固定為<strong className="font-medium text-zinc-200"> 結果（互斥）</strong>
+            ：點三顆骰子記入總點，賠率表僅供參考。
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="追蹤模式">
+            {(
+              [
+                ["outcome", "結果（互斥）"],
+                ["bet", "注項（可多選）"],
+              ] as const
+            ).map(([mode, label]) => {
+              const active = trackMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`min-h-12 rounded-lg border px-3 text-sm ${
+                    active
+                      ? "border-sky-500 bg-sky-950 text-sky-100"
+                      : "border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500"
+                  }`}
+                  aria-pressed={active}
+                  onClick={() => onSelectTrackMode(mode)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {isCustom ? (

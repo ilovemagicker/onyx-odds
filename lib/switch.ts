@@ -29,18 +29,21 @@ export function applyTrackMode(
   state: OddsState,
   mode: TrackMode,
 ): OddsState {
+  // 骰寶只允許結果模式（三骰輸入）；請求注項時改為結果
+  const resolved: TrackMode =
+    state.templateId === "sic-bo" ? "outcome" : mode;
   if (state.templateId === null) {
     return {
       ...state,
-      trackMode: mode,
+      trackMode: resolved,
       rounds: [],
       updatedAt: Date.now(),
     };
   }
   return {
     ...state,
-    trackMode: mode,
-    options: optionsForTemplate(state.templateId, mode),
+    trackMode: resolved,
+    options: optionsForTemplate(state.templateId, resolved),
     rounds: [],
     updatedAt: Date.now(),
   };

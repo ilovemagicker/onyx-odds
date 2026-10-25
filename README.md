@@ -19,7 +19,7 @@
 
 ## Casino templates
 
-Built-in games: 百家樂、龍虎、歐式輪盤、骰寶. Pick a template, choose **結果（互斥）** or **注項（可多選）**, record rounds, and read the same-page payout table (common rules / reference only). Custom 2–50 options remain. Data: `localStorage` key `onyx-odds:v2` (migrates `onyx-odds:v1`).
+Built-in games: 百家樂、龍虎、歐式輪盤、骰寶. Pick a template, choose **結果（互斥）** or **注項（可多選）**, record rounds, and read the same-page payout table (common rules / reference only). **骰寶** locks to outcome mode and records via three die faces (1–6); totals map to options 3–18. Custom 2–50 options remain. Data: `localStorage` key `onyx-odds:v2` (migrates `onyx-odds:v1`).
 
 ## 免責
 
