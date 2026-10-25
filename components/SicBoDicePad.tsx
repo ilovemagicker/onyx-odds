@@ -17,8 +17,7 @@ type Props = {
   onUndo: () => void;
 };
 
-const COMMIT_HOLD_MS = 280;
-const TOAST_MS = 1200;
+const TOAST_MS = 1000;
 
 function nextEmptyFocus(slots: [Slot, Slot, Slot]): 0 | 1 | 2 {
   for (let i = 0; i < 3; i++) {
@@ -45,63 +44,47 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
   const [slots, setSlots] = useState<[Slot, Slot, Slot]>([null, null, null]);
   const [focus, setFocus] = useState<0 | 1 | 2>(0);
   const [toast, setToast] = useState<string | null>(null);
-  const [committing, setCommitting] = useState(false);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      if (holdTimer.current) clearTimeout(holdTimer.current);
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, []);
 
   const clearPending = useCallback(() => {
-    if (holdTimer.current) {
-      clearTimeout(holdTimer.current);
-      holdTimer.current = null;
-    }
     setSlots([null, null, null]);
     setFocus(0);
-    setCommitting(false);
   }, []);
 
   const writeFace = useCallback(
     (face: DieFace) => {
-      if (committing) return;
-
       const next: [Slot, Slot, Slot] = [...slots];
       next[focus] = face;
 
       if (next[0] !== null && next[1] !== null && next[2] !== null) {
         const sum = diceTotal(next[0], next[1], next[2]);
         const outcomeId = diceToOutcomeId(next[0], next[1], next[2]);
-        setSlots(next);
-        setCommitting(true);
+        onCommit(outcomeId);
+        setSlots([null, null, null]);
+        setFocus(0);
         setToast(`已記入 · 總點 ${sum}`);
         if (toastTimer.current) clearTimeout(toastTimer.current);
         toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
-        onCommit(outcomeId);
-        holdTimer.current = setTimeout(() => {
-          setSlots([null, null, null]);
-          setFocus(0);
-          setCommitting(false);
-          holdTimer.current = null;
-        }, COMMIT_HOLD_MS);
         return;
       }
 
       setSlots(next);
       setFocus(nextEmptyFocus(next));
     },
-    [slots, focus, committing, onCommit],
+    [slots, focus, onCommit],
   );
 
   const filled = slots.filter((s) => s !== null).length;
   const helper = helperLine(slots, focus);
 
   return (
-    <section className="space-y-4 rounded-xl border border-zinc-700 bg-zinc-900 p-4 sm:p-5">
+    <section className="relative space-y-4 rounded-xl border border-zinc-700 bg-zinc-900 p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold text-zinc-50">記入骰子</h2>
         <p className="text-sm tabular-nums text-zinc-400" aria-live="polite">
@@ -109,9 +92,10 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
         </p>
       </div>
 
+      {/* Overlay toast — no layout shift; does not block taps */}
       {toast ? (
         <p
-          className="rounded-lg border border-sky-500/50 bg-sky-950 px-3 py-2 text-sm text-sky-100"
+          className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-sky-500/50 bg-sky-950/95 px-3 py-1.5 text-sm text-sky-100 shadow-lg"
           role="status"
           aria-live="polite"
         >
@@ -119,7 +103,6 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
         </p>
       ) : null}
 
-      {/* Three die slots */}
       <div
         className="flex items-center justify-center gap-3"
         role="group"
@@ -127,24 +110,19 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
       >
         {([0, 1, 2] as const).map((i) => {
           const selected = slots[i];
-          const isFocus = focus === i && !committing;
+          const isFocus = focus === i;
           return (
             <button
               key={i}
               type="button"
-              disabled={committing}
               aria-label={
                 selected === null
                   ? `第 ${i + 1} 顆，未選`
                   : `第 ${i + 1} 顆，已選 ${selected}`
               }
               aria-pressed={isFocus}
-              className="rounded-xl p-0.5 disabled:opacity-80"
-              onClick={() => {
-                if (committing) return;
-                if (selected !== null) setFocus(i);
-                else setFocus(i);
-              }}
+              className="rounded-xl p-0.5"
+              onClick={() => setFocus(i)}
             >
               <DiePip value={selected} size="slot" focused={isFocus} />
             </button>
@@ -152,11 +130,13 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
         })}
       </div>
 
-      <p className="text-center text-sm tabular-nums text-zinc-400" aria-live="polite">
+      <p
+        className="text-center text-sm tabular-nums text-zinc-400"
+        aria-live="polite"
+      >
         {helper}
       </p>
 
-      {/* Shared face palette */}
       <div
         className="flex flex-wrap items-center justify-center gap-2"
         role="group"
@@ -169,7 +149,6 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
             size="face"
             asButton
             pressed={slots[focus] === face}
-            disabled={committing}
             aria-label={`點數 ${face}`}
             onClick={() => writeFace(face)}
           />
@@ -180,7 +159,7 @@ export function SicBoDicePad({ canUndo, onCommit, onUndo }: Props) {
         <button
           type="button"
           className="min-h-12 flex-1 rounded-lg border border-zinc-700 px-4 text-base text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:border-zinc-500"
-          disabled={committing || !slots.some((s) => s !== null)}
+          disabled={!slots.some((s) => s !== null)}
           onClick={clearPending}
         >
           清除未記入
