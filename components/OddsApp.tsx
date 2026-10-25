@@ -10,6 +10,8 @@ import { SetupPanel } from "@/components/SetupPanel";
 import { StatsTable } from "@/components/StatsTable";
 import { exportResultsText } from "@/lib/export";
 import {
+  MAX_OPTIONS,
+  MIN_OPTIONS,
   defaultOptions,
   renameOption,
   resizeOptions,
@@ -25,6 +27,7 @@ export function OddsApp() {
   const [hydrated, setHydrated] = useState(false);
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
+  const [nSelectEpoch, setNSelectEpoch] = useState(0);
 
   useEffect(() => {
     const state = loadState();
@@ -49,11 +52,23 @@ export function OddsApp() {
 
   const handleChangeN = useCallback(
     (n: number) => {
-      if (n === options.length) return;
+      if (
+        !Number.isInteger(n) ||
+        n < MIN_OPTIONS ||
+        n > MAX_OPTIONS ||
+        n === options.length
+      ) {
+        return;
+      }
       const ok = window.confirm(
         "變更選項數會清空目前所有結果，確定繼續？",
       );
-      if (!ok) return;
+      if (!ok) {
+        // Native <select> can stick on the rejected value after confirm cancel;
+        // remount SetupPanel so value stays synced with options.length.
+        setNSelectEpoch((e) => e + 1);
+        return;
+      }
       const { options: next } = resizeOptions(options, n);
       setOptions(next);
       setResults([]);
@@ -82,15 +97,17 @@ export function OddsApp() {
   }, []);
 
   const handlePasteApply = useCallback(
-    (text: string) => {
+    (text: string): boolean => {
       const parsed = parsePaste(text, options);
       if (!parsed.ok) {
         setPasteError(parsed.error);
-        return;
+        return false;
       }
       setPasteError(null);
-      if (parsed.ids.length === 0) return;
-      setResults((prev) => [...prev, ...parsed.ids]);
+      if (parsed.ids.length > 0) {
+        setResults((prev) => [...prev, ...parsed.ids]);
+      }
+      return true;
     },
     [options],
   );
@@ -142,6 +159,7 @@ export function OddsApp() {
       </header>
 
       <SetupPanel
+        key={`${options.length}-${nSelectEpoch}`}
         options={options}
         onChangeN={handleChangeN}
         onRenameChange={handleRenameChange}

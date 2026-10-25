@@ -30,9 +30,20 @@ export function SetupPanel({
         </label>
         <select
           id="option-count"
+          key={n}
           className="min-h-11 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-base text-zinc-100"
           value={n}
-          onChange={(e) => onChangeN(Number(e.target.value))}
+          onChange={(e) => {
+            const next = Number(e.target.value);
+            if (
+              !Number.isInteger(next) ||
+              next < MIN_OPTIONS ||
+              next > MAX_OPTIONS
+            ) {
+              return;
+            }
+            onChangeN(next);
+          }}
         >
           {counts.map((c) => (
             <option key={c} value={c}>

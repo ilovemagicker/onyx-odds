@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type Props = {
   error: string | null;
-  onApply: (text: string) => void;
+  onApply: (text: string) => boolean;
 };
 
 export function PasteInput({ error, onApply }: Props) {
@@ -30,7 +30,9 @@ export function PasteInput({ error, onApply }: Props) {
       <button
         type="button"
         className="min-h-11 rounded-lg bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-500"
-        onClick={() => onApply(text)}
+        onClick={() => {
+          if (onApply(text)) setText("");
+        }}
       >
         套用貼上
       </button>
