@@ -1,20 +1,23 @@
 import type { Option } from "./types";
 
 export const MIN_OPTIONS = 2;
-export const MAX_OPTIONS = 20;
-
-const LETTERS = "ABCDEFGHIJKLMNOPQRST"; // 20 chars
+export const MAX_OPTIONS = 50;
 
 function clampN(n: number): number {
   if (!Number.isFinite(n)) return MIN_OPTIONS;
   return Math.min(MAX_OPTIONS, Math.max(MIN_OPTIONS, Math.trunc(n)));
 }
 
+function defaultLabel(id: number): string {
+  if (id >= 0 && id < 26) return String.fromCharCode(65 + id);
+  return `選項${id + 1}`;
+}
+
 export function defaultOptions(n: number): Option[] {
   const count = clampN(n);
   return Array.from({ length: count }, (_, id) => ({
     id,
-    label: LETTERS[id] ?? `選項${id + 1}`,
+    label: defaultLabel(id),
   }));
 }
 
@@ -28,7 +31,7 @@ export function resizeOptions(
     const prev = options.find((o) => o.id === id);
     next.push({
       id,
-      label: prev?.label ?? LETTERS[id] ?? `選項${id + 1}`,
+      label: prev?.label ?? defaultLabel(id),
     });
   }
   return { options: next, resultsCleared: true };

@@ -7,6 +7,13 @@ import {
   MAX_OPTIONS,
 } from "@/lib/options";
 
+describe("MAX_OPTIONS", () => {
+  it("is 50", () => {
+    expect(MAX_OPTIONS).toBe(50);
+    expect(MIN_OPTIONS).toBe(2);
+  });
+});
+
 describe("defaultOptions", () => {
   it("creates N options with ids 0..N-1", () => {
     const opts = defaultOptions(3);
@@ -17,6 +24,14 @@ describe("defaultOptions", () => {
   it("clamps below min and above max", () => {
     expect(defaultOptions(1)).toHaveLength(MIN_OPTIONS);
     expect(defaultOptions(99)).toHaveLength(MAX_OPTIONS);
+  });
+
+  it("labels A–Z then 選項N for large N", () => {
+    const opts = defaultOptions(50);
+    expect(opts[0].label).toBe("A");
+    expect(opts[25].label).toBe("Z");
+    expect(opts[26].label).toBe("選項27");
+    expect(opts[49].label).toBe("選項50");
   });
 });
 
@@ -39,6 +54,11 @@ describe("resizeOptions", () => {
     const { options } = resizeOptions(defaultOptions(4), 2);
     expect(options).toHaveLength(2);
     expect(options.map((o) => o.id)).toEqual([0, 1]);
+  });
+
+  it("allows resize to 50", () => {
+    const { options } = resizeOptions(defaultOptions(2), 50);
+    expect(options).toHaveLength(50);
   });
 });
 
