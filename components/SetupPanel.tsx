@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { MAX_OPTIONS, MIN_OPTIONS } from "@/lib/options";
-import { TEMPLATE_PICKER } from "@/lib/templates";
+import { TEMPLATE_PICKER, templateDisplayName } from "@/lib/templates";
 import type { Option, TemplateId, TrackMode } from "@/lib/types";
 
 type Props = {
   templateId: TemplateId | null;
   trackMode: TrackMode;
   options: Option[];
+  /** When true, start collapsed (sic-bo P0). */
+  defaultCollapsed?: boolean;
   onSelectTemplate: (id: TemplateId | null) => void;
   onSelectTrackMode: (mode: TrackMode) => void;
   onChangeN: (n: number) => void;
@@ -19,12 +22,14 @@ export function SetupPanel({
   templateId,
   trackMode,
   options,
+  defaultCollapsed = false,
   onSelectTemplate,
   onSelectTrackMode,
   onChangeN,
   onRenameChange,
   onRenameCommit,
 }: Props) {
+  const [open, setOpen] = useState(!defaultCollapsed);
   const n = options.length;
   const counts = Array.from(
     { length: MAX_OPTIONS - MIN_OPTIONS + 1 },
@@ -33,9 +38,40 @@ export function SetupPanel({
   const canDec = n > MIN_OPTIONS;
   const canInc = n < MAX_OPTIONS;
   const isCustom = templateId === null;
+  const gameLabel = templateDisplayName(templateId);
+
+  if (!open && defaultCollapsed) {
+    return (
+      <section className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3">
+        <p className="text-sm text-zinc-300">
+          遊戲：<span className="font-medium text-zinc-50">{gameLabel}</span>
+        </p>
+        <button
+          type="button"
+          className="min-h-11 rounded-lg border border-zinc-700 px-3 text-sm text-zinc-300 hover:border-zinc-500"
+          onClick={() => setOpen(true)}
+        >
+          變更
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+      {defaultCollapsed ? (
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-zinc-300">設定</span>
+          <button
+            type="button"
+            className="min-h-11 rounded-lg border border-zinc-700 px-3 text-sm text-zinc-400 hover:border-zinc-500"
+            onClick={() => setOpen(false)}
+          >
+            收合
+          </button>
+        </div>
+      ) : null}
+
       <div className="space-y-2">
         <span className="text-sm text-zinc-400">遊戲</span>
         <div className="flex flex-wrap gap-2">
@@ -64,7 +100,8 @@ export function SetupPanel({
         <span className="text-sm text-zinc-400">追蹤模式</span>
         {templateId === "sic-bo" ? (
           <p className="text-sm text-zinc-400">
-            骰寶固定為<strong className="font-medium text-zinc-200"> 結果（互斥）</strong>
+            骰寶固定為
+            <strong className="font-medium text-zinc-200"> 結果（互斥）</strong>
             ：點三顆骰子記入總點，賠率表僅供參考。
           </p>
         ) : (
