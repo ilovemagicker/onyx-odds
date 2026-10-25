@@ -343,8 +343,12 @@ export function OddsApp() {
 
       {isSicBo ? (
         <>
-          <ReferenceBanner options={options} stats={stats} />
           {inputPad}
+          <ReferenceBanner
+            options={options}
+            stats={stats}
+            payoutRows={payoutRows}
+          />
           {road}
           <details className="rounded-xl border border-zinc-800 bg-zinc-900/40 open:pb-2">
             <summary className="cursor-pointer list-none px-4 py-3 text-sm text-zinc-300 marker:content-none [&::-webkit-details-marker]:hidden">
@@ -368,8 +372,12 @@ export function OddsApp() {
         </>
       ) : (
         <>
-          <ReferenceBanner options={options} stats={stats} />
           {inputPad}
+          <ReferenceBanner
+            options={options}
+            stats={stats}
+            payoutRows={payoutRows}
+          />
           {paste}
           {payout}
           {road}
