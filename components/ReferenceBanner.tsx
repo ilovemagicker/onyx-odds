@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import type { Option, PayoutRow } from "@/lib/types";
 import type { StatsSummary } from "@/lib/stats";
 
@@ -20,17 +19,6 @@ function cell(v: string | undefined): string {
   return v && v.length > 0 ? v : "—";
 }
 
-function defaultRowIndex(rows: PayoutRow[]): number {
-  const withProb = rows.findIndex(
-    (r) => r.probability != null && r.probability.length > 0,
-  );
-  return withProb >= 0 ? withProb : 0;
-}
-
-function rowsKey(rows: PayoutRow[]): string {
-  return rows.map((r) => r.label).join("\0");
-}
-
 export function ReferenceBanner({
   options,
   stats,
@@ -39,27 +27,6 @@ export function ReferenceBanner({
   const empty = stats.total === 0;
   const hasPayout =
     Array.isArray(payoutRows) && payoutRows.length > 0 ? payoutRows : null;
-
-  const key = useMemo(
-    () => (hasPayout ? rowsKey(hasPayout) : ""),
-    [hasPayout],
-  );
-
-  const [selected, setSelected] = useState(0);
-
-  useEffect(() => {
-    if (!hasPayout) {
-      setSelected(0);
-      return;
-    }
-    setSelected(defaultRowIndex(hasPayout));
-    // Reset when template payout label set changes (key), not on every parent re-render.
-  }, [key, hasPayout]);
-
-  const row =
-    hasPayout && selected >= 0 && selected < hasPayout.length
-      ? hasPayout[selected]
-      : null;
 
   return (
     <section className="rounded-xl border border-sky-900/50 bg-sky-950/40 p-4">
@@ -96,43 +63,42 @@ export function ReferenceBanner({
         </div>
       )}
 
-      {hasPayout && row ? (
+      {hasPayout ? (
         <div className="mt-4 space-y-2 border-t border-sky-900/40 pt-3">
-          <label className="block text-xs text-zinc-400" htmlFor="ref-payout-select">
-            倍率
-          </label>
-          <select
-            id="ref-payout-select"
-            className="min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
-            value={selected}
-            onChange={(e) => setSelected(Number(e.target.value))}
-          >
-            {hasPayout.map((r, i) => (
-              <option key={`${r.label}-${i}`} value={i}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-          <dl className="grid grid-cols-3 gap-2 text-sm">
-            <div>
-              <dt className="text-xs text-zinc-500">賠率</dt>
-              <dd className="font-medium tabular-nums text-zinc-100">
-                {cell(row.payout)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-zinc-500">理論機率</dt>
-              <dd className="font-medium tabular-nums text-sky-200">
-                {cell(row.probability)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-zinc-500">莊家優勢</dt>
-              <dd className="font-medium tabular-nums text-zinc-300">
-                {cell(row.houseEdge)}
-              </dd>
-            </div>
-          </dl>
+          <p className="text-xs text-zinc-400">倍率</p>
+          <div className="max-h-56 overflow-y-auto overflow-x-auto rounded-lg border border-sky-900/40">
+            <table className="w-full min-w-[18rem] text-left text-xs">
+              <thead className="sticky top-0 bg-sky-950 text-zinc-500">
+                <tr>
+                  <th className="px-2 py-1.5 font-medium">注項</th>
+                  <th className="px-2 py-1.5 font-medium">賠率</th>
+                  <th className="px-2 py-1.5 font-medium">理論機率</th>
+                  <th className="px-2 py-1.5 font-medium">莊家優勢</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hasPayout.map((row, i) => (
+                  <tr
+                    key={`${row.label}-${i}`}
+                    className="border-t border-sky-900/30 odd:bg-sky-950/30"
+                  >
+                    <td className="px-2 py-1.5 font-medium text-zinc-100">
+                      {row.label}
+                    </td>
+                    <td className="px-2 py-1.5 tabular-nums text-zinc-100">
+                      {cell(row.payout)}
+                    </td>
+                    <td className="px-2 py-1.5 tabular-nums text-sky-200">
+                      {cell(row.probability)}
+                    </td>
+                    <td className="px-2 py-1.5 tabular-nums text-zinc-300">
+                      {cell(row.houseEdge)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : null}
     </section>

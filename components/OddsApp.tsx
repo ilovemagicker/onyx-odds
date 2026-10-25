@@ -350,7 +350,7 @@ export function OddsApp() {
             payoutRows={payoutRows}
           />
           {road}
-          <details className="rounded-xl border border-zinc-800 bg-zinc-900/40 open:pb-2">
+          <details open className="rounded-xl border border-zinc-800 bg-zinc-900/40 open:pb-2">
             <summary className="cursor-pointer list-none px-4 py-3 text-sm text-zinc-300 marker:content-none [&::-webkit-details-marker]:hidden">
               <span className="font-medium">賠率參考</span>
               <span className="ml-2 text-xs text-zinc-500">不影響記入</span>
