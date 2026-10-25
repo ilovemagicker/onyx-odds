@@ -1,4 +1,4 @@
-import type { Option } from "./types";
+import type { Option, Round } from "./types";
 
 export type OptionStat = {
   id: number;
@@ -22,21 +22,31 @@ export type StatsSummary = {
 
 export function computeStats(
   options: Option[],
-  results: number[],
+  rounds: Round[],
 ): StatsSummary {
   const N = options.length;
-  const T = results.length;
+  const T = rounds.length;
   const fair = N > 0 ? 1 / N : 0;
 
   const counts = new Map<number, number>();
   for (const o of options) counts.set(o.id, 0);
-  for (const id of results) {
-    if (counts.has(id)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const round of rounds) {
+    const seen = new Set<number>();
+    for (const id of round) {
+      if (!counts.has(id) || seen.has(id)) continue;
+      seen.add(id);
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
   }
 
   const lastIndex = new Map<number, number>();
-  results.forEach((id, idx) => {
-    lastIndex.set(id, idx);
+  rounds.forEach((round, idx) => {
+    const seen = new Set<number>();
+    for (const id of round) {
+      if (!counts.has(id) || seen.has(id)) continue;
+      seen.add(id);
+      lastIndex.set(id, idx);
+    }
   });
 
   const rowsBase = options.map((o) => {
