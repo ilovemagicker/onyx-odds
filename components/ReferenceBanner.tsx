@@ -20,7 +20,12 @@ export function ReferenceBanner({ options, stats }: Props) {
     <section className="rounded-xl border border-sky-900/50 bg-sky-950/40 p-4">
       <h2 className="mb-2 text-sm font-medium text-sky-200">下一場參考</h2>
       {empty ? (
-        <p className="text-base text-zinc-300">尚無紀錄</p>
+        <div className="space-y-1">
+          <p className="text-base font-medium text-zinc-200">尚無紀錄</p>
+          <p className="text-sm text-zinc-500">
+            點選下方選項或貼上結果後，會顯示最熱與該出最久
+          </p>
+        </div>
       ) : (
         <dl className="grid gap-2 sm:grid-cols-2">
           <div>

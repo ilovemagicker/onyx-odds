@@ -12,6 +12,7 @@ type Props = {
 export function ResultButtons({ options, canUndo, onPick, onUndo }: Props) {
   return (
     <section className="space-y-3">
+      <h2 className="text-sm font-medium text-zinc-400">記錄結果</h2>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <button
@@ -26,7 +27,7 @@ export function ResultButtons({ options, canUndo, onPick, onUndo }: Props) {
       </div>
       <button
         type="button"
-        className="min-h-11 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:border-zinc-500"
+        className="min-h-12 rounded-lg border border-zinc-700 px-4 text-base text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:border-zinc-500"
         disabled={!canUndo}
         onClick={onUndo}
       >

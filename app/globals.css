@@ -2,6 +2,19 @@
 
 body {
   @apply bg-zinc-950 text-zinc-100 antialiased;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+button,
+[type="button"],
+[type="submit"],
+select {
+  touch-action: manipulation;
+}
+
+.disclaimer {
+  /* Keep above-fold on ~390px phones: short, high-contrast strip */
+  @apply rounded-lg border border-amber-800/60 bg-amber-950/50 px-3 py-2;
 }
 
 .road-scroll {

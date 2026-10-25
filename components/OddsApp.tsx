@@ -145,7 +145,7 @@ export function OddsApp() {
   }, [options, results]);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-5 px-4 py-6 sm:px-6">
+    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-4 px-4 py-5 sm:gap-5 sm:px-6 sm:py-6">
       <header className="space-y-2">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
@@ -155,6 +155,9 @@ export function OddsApp() {
             Onyx Labs
           </span>
         </div>
+        <p className="text-sm text-zinc-400">
+          通用 N 選項歷史統計 · 非保證預測
+        </p>
         <Disclaimer />
       </header>
 
@@ -184,21 +187,21 @@ export function OddsApp() {
       <footer className="flex flex-wrap gap-2 border-t border-zinc-800 pt-4 pb-8">
         <button
           type="button"
-          className="min-h-11 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 hover:border-zinc-500"
+          className="min-h-12 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 hover:border-zinc-500"
           onClick={handleClear}
         >
           清空結果
         </button>
         <button
           type="button"
-          className="min-h-11 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 hover:border-zinc-500"
+          className="min-h-12 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-300 hover:border-zinc-500"
           onClick={handleExport}
         >
           匯出文字
         </button>
         <button
           type="button"
-          className="min-h-11 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-500 hover:border-zinc-500"
+          className="min-h-12 rounded-lg border border-zinc-700 px-4 text-sm text-zinc-500 hover:border-zinc-500"
           onClick={handleResetAll}
         >
           全部重設

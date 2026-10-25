@@ -29,7 +29,7 @@ export function PasteInput({ error, onApply }: Props) {
       ) : null}
       <button
         type="button"
-        className="min-h-11 rounded-lg bg-sky-600 px-4 text-sm font-medium text-white hover:bg-sky-500"
+        className="min-h-12 rounded-lg bg-sky-600 px-4 text-base font-medium text-white hover:bg-sky-500"
         onClick={() => {
           if (onApply(text)) setText("");
         }}
