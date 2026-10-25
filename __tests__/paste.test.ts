@@ -40,3 +40,17 @@ describe("parsePaste", () => {
     });
   });
 });
+
+describe("parsePaste bet-mode caller contract", () => {
+  it("returns flat ids that callers wrap as singleton rounds", () => {
+    const opts = [
+      { id: 0, label: "莊" },
+      { id: 1, label: "閑" },
+    ];
+    const r = parsePaste("莊 閑 莊", opts);
+    expect(r).toEqual({ ok: true, ids: [0, 1, 0] });
+    if (r.ok) {
+      expect(r.ids.map((id) => [id])).toEqual([[0], [1], [0]]);
+    }
+  });
+});
